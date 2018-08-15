@@ -253,57 +253,39 @@ void C_HL2MP_Player::PreThink( void ) {
 		vTempAngles[YAW] += 360.0f;
 
 	SetLocalAngles( vTempAngles );
-
 	BaseClass::PreThink();
-
 	HandleSpeedChanges();
 
 	if ( m_HL2Local.m_flSuitPower <= 0.0f )
-	{
 		if( IsSprinting() )
-		{
 			StopSprinting();
-		}
-	}
 }
 
-const QAngle &C_HL2MP_Player::EyeAngles()
-{
+const QAngle &C_HL2MP_Player::EyeAngles() {
 	if( IsLocalPlayer() )
-	{
 		return BaseClass::EyeAngles();
-	}
 	else
-	{
 		return m_angEyeAngles;
-	}
 }
 
-//-----------------------------------------------------------------------------
 // Purpose: 
-//-----------------------------------------------------------------------------
-void C_HL2MP_Player::AddEntity( void )
-{
+void C_HL2MP_Player::AddEntity( void ) {
 	BaseClass::AddEntity();
 
 	QAngle vTempAngles = GetLocalAngles();
 	vTempAngles[PITCH] = m_angEyeAngles[PITCH];
 
 	SetLocalAngles( vTempAngles );
-		
 	m_PlayerAnimState.Update();
 
 	// Zero out model pitch, blending takes care of all of it.
 	SetLocalAnglesDim( X_INDEX, 0 );
 
-	if( this != C_BasePlayer::GetLocalPlayer() )
-	{
-		if ( IsEffectActive( EF_DIMLIGHT ) )
-		{
+	if( this != C_BasePlayer::GetLocalPlayer() ) {
+		if ( IsEffectActive( EF_DIMLIGHT ) ) {
 			int iAttachment = LookupAttachment( "anim_attachment_RH" );
 
-			if ( iAttachment < 0 )
-				return;
+			if ( iAttachment < 0 ) return;
 
 			Vector vecOrigin;
 			QAngle eyeAngles = m_angEyeAngles;
@@ -316,8 +298,7 @@ void C_HL2MP_Player::AddEntity( void )
 			trace_t tr;
 			UTIL_TraceLine( vecOrigin, vecOrigin + (vForward * 200), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 
-			if( !m_pFlashlightBeam )
-			{
+			if( !m_pFlashlightBeam ) {
 				BeamInfo_t beamInfo;
 				beamInfo.m_nType = TE_BEAMPOINTS;
 				beamInfo.m_vecStart = tr.startpos;
@@ -344,8 +325,7 @@ void C_HL2MP_Player::AddEntity( void )
 				m_pFlashlightBeam = beams->CreateBeamPoints( beamInfo );
 			}
 
-			if( m_pFlashlightBeam )
-			{
+			if( m_pFlashlightBeam ) {
 				BeamInfo_t beamInfo;
 				beamInfo.m_vecStart = tr.startpos;
 				beamInfo.m_vecEnd = tr.endpos;
@@ -365,14 +345,11 @@ void C_HL2MP_Player::AddEntity( void )
 			}
 		}
 		else if ( m_pFlashlightBeam )
-		{
 			ReleaseFlashlight();
-		}
 	}
 }
 
-ShadowType_t C_HL2MP_Player::ShadowCastType( void ) 
-{
+ShadowType_t C_HL2MP_Player::ShadowCastType( void ) {
 	if ( !IsVisible() )
 		 return SHADOWS_NONE;
 
@@ -380,45 +357,29 @@ ShadowType_t C_HL2MP_Player::ShadowCastType( void )
 }
 
 
-const QAngle& C_HL2MP_Player::GetRenderAngles()
-{
+const QAngle& C_HL2MP_Player::GetRenderAngles() {
 	if ( IsRagdoll() )
-	{
 		return vec3_angle;
-	}
 	else
-	{
 		return m_PlayerAnimState.GetRenderAngles();
-	}
 }
 
-bool C_HL2MP_Player::ShouldDraw( void )
-{
+bool C_HL2MP_Player::ShouldDraw( void ) {
 	// If we're dead, our ragdoll will be drawn for us instead.
 	if ( !IsAlive() )
 		return false;
-
-//	if( GetTeamNumber() == TEAM_SPECTATOR )
-//		return false;
-
-	if( IsLocalPlayer() && IsRagdoll() )
+	if (IsLocalPlayer() && IsRagdoll())
 		return true;
-	
 	if ( IsRagdoll() )
 		return false;
 
 	return BaseClass::ShouldDraw();
 }
 
-void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )
-{
+void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state ) {
 	if ( state == SHOULDTRANSMIT_END )
-	{
 		if( m_pFlashlightBeam != NULL )
-		{
 			ReleaseFlashlight();
-		}
-	}
 
 	BaseClass::NotifyShouldTransmit( state );
 }
@@ -426,19 +387,14 @@ void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )
 void C_HL2MP_Player::OnDataChanged( DataUpdateType_t type )
 {
 	BaseClass::OnDataChanged( type );
-
 	if ( type == DATA_UPDATE_CREATED )
-	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
-	}
-
 	UpdateVisibility();
 }
 
 void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
 {
-	if ( m_iSpawnInterpCounter != m_iSpawnInterpCounterCache )
-	{
+	if ( m_iSpawnInterpCounter != m_iSpawnInterpCounterCache ) {
 		MoveToLastReceivedPosition( true );
 		ResetLatched();
 		m_iSpawnInterpCounterCache = m_iSpawnInterpCounter;
@@ -447,19 +403,15 @@ void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
 	BaseClass::PostDataUpdate( updateType );
 }
 
-void C_HL2MP_Player::ReleaseFlashlight( void )
-{
-	if( m_pFlashlightBeam )
-	{
+void C_HL2MP_Player::ReleaseFlashlight( void ) {
+	if( m_pFlashlightBeam ) {
 		m_pFlashlightBeam->flags = 0;
 		m_pFlashlightBeam->die = gpGlobals->curtime - 1;
-
 		m_pFlashlightBeam = NULL;
 	}
 }
 
-float C_HL2MP_Player::GetFOV( void )
-{
+float C_HL2MP_Player::GetFOV( void ) {
 	//Find our FOV with offset zoom value
 	float flFOVOffset = C_BasePlayer::GetFOV() + GetZoom();
 
