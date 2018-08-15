@@ -1,10 +1,7 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
-//
 // Purpose: 
-//
 // $Workfile:     $
 // $NoKeywords: $
-//=============================================================================//
 
 #if !defined( C_BASEHLPLAYER_H )
 #define C_BASEHLPLAYER_H
@@ -12,12 +9,10 @@
 #pragma once
 #endif
 
-
 #include "c_baseplayer.h"
 #include "c_hl2_playerlocaldata.h"
 
-class C_BaseHLPlayer : public C_BasePlayer
-{
+class C_BaseHLPlayer : public C_BasePlayer {
 public:
 	DECLARE_CLASS( C_BaseHLPlayer, C_BasePlayer );
 	DECLARE_CLIENTCLASS();
@@ -45,7 +40,7 @@ public:
 	virtual void		ExitLadder();
 	bool				IsSprinting() const { return m_fIsSprinting; }
 	
-	// Input handling
+	// Input handling #V
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
 	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
@@ -60,7 +55,7 @@ public:
 	bool				m_fIsSprinting;
 
 private:
-	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
+	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible #V
 	
 	bool				TestMove( const Vector &pos, float fVertDist, float radius, const Vector &objPos, const Vector &objDir );
 
@@ -69,13 +64,11 @@ private:
 	float				m_flZoomRate;
 	float				m_flZoomStartTime;
 
-	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code...
+	bool				m_bPlayUseDenySound;		// Signaled by PlayerUse, but can be unset by HL2 ladder code... #V
 	float				m_flSpeedMod;
 	float				m_flExitSpeedMod;
 
-
 friend class CHL2GameMovement;
 };
-
 
 #endif

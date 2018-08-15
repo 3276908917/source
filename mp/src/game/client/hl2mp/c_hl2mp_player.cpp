@@ -1,8 +1,5 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose:		Player for HL2.
-//
-//=============================================================================//
+// Purpose:		Player for HL2MP.
 
 #include "cbase.h"
 #include "vcollide_parse.h"
@@ -23,30 +20,29 @@
 LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 
 IMPLEMENT_CLIENTCLASS_DT(C_HL2MP_Player, DT_HL2MP_Player, CHL2MP_Player)
-	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
-	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
-	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
-	RecvPropInt( RECVINFO( m_iSpawnInterpCounter ) ),
-	RecvPropInt( RECVINFO( m_iPlayerSoundType) ),
+RecvPropFloat(RECVINFO(m_angEyeAngles[0])),
+RecvPropFloat(RECVINFO(m_angEyeAngles[1])),
+RecvPropEHandle(RECVINFO(m_hRagdoll)),
+RecvPropInt(RECVINFO(m_iSpawnInterpCounter)),
+RecvPropInt(RECVINFO(m_iPlayerSoundType)),
 
-	RecvPropBool( RECVINFO( m_fIsWalking ) ),
+RecvPropBool(RECVINFO(m_fIsWalking)),
 END_RECV_TABLE()
 
-BEGIN_PREDICTION_DATA( C_HL2MP_Player )
-	DEFINE_PRED_FIELD( m_fIsWalking, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+BEGIN_PREDICTION_DATA(C_HL2MP_Player)
+DEFINE_PRED_FIELD(m_fIsWalking, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 
-#define	HL2_WALK_SPEED 150
-#define	HL2_NORM_SPEED 190
-#define	HL2_SPRINT_SPEED 320
+static const int HL2_WALK_SPEED = 150;
+static const int HL2_NORM_SPEED = 190;
+static const int HL2_SPRINT_SPEED = 320;
 
 static ConVar cl_playermodel( "cl_playermodel", "none", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Default Player Model");
 static ConVar cl_defaultweapon( "cl_defaultweapon", "weapon_physcannon", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default Spawn Weapon");
 
 void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage);
 
-C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles( "C_HL2MP_Player::m_iv_angEyeAngles" )
-{
+C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles( "C_HL2MP_Player::m_iv_angEyeAngles" ) {
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
 
@@ -60,23 +56,13 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 	m_pFlashlightBeam = NULL;
 }
 
-C_HL2MP_Player::~C_HL2MP_Player( void )
-{
-	ReleaseFlashlight();
-}
+C_HL2MP_Player::~C_HL2MP_Player( void ) { ReleaseFlashlight(); }
 
-int C_HL2MP_Player::GetIDTarget() const
-{
-	return m_iIDEntIndex;
-}
+int C_HL2MP_Player::GetIDTarget() const { return m_iIDEntIndex; }
 
-//-----------------------------------------------------------------------------
 // Purpose: Update this client's target entity
-//-----------------------------------------------------------------------------
-void C_HL2MP_Player::UpdateIDTarget()
-{
-	if ( !IsLocalPlayer() )
-		return;
+void C_HL2MP_Player::UpdateIDTarget() {
+	if ( !IsLocalPlayer() ) return;
 
 	// Clear old target and find a new one
 	m_iIDEntIndex = 0;
@@ -92,58 +78,43 @@ void C_HL2MP_Player::UpdateIDTarget()
 	VectorMA( MainViewOrigin(), 10,   MainViewForward(), vecStart );
 	UTIL_TraceLine( vecStart, vecEnd, MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
 
-	if ( !tr.startsolid && tr.DidHitNonWorldEntity() )
-	{
+	if ( !tr.startsolid && tr.DidHitNonWorldEntity() ) {
 		C_BaseEntity *pEntity = tr.m_pEnt;
 
 		if ( pEntity && (pEntity != this) )
-		{
 			m_iIDEntIndex = pEntity->entindex();
-		}
 	}
 }
 
-void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
-{
+void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator ) {
 	Vector vecOrigin = ptr->endpos - vecDir * 4;
 
 	float flDistance = 0.0f;
 	
 	if ( info.GetAttacker() )
-	{
 		flDistance = (ptr->endpos - info.GetAttacker()->GetAbsOrigin()).Length();
-	}
 
-	if ( m_takedamage )
-	{
+	if ( m_takedamage ) {
+
 		AddMultiDamage( info, this );
-
 		int blood = BloodColor();
-		
 		CBaseEntity *pAttacker = info.GetAttacker();
 
 		if ( pAttacker )
-		{
 			if ( HL2MPRules()->IsTeamplay() && pAttacker->InSameTeam( this ) == true )
 				return;
-		}
 
-		if ( blood != DONT_BLEED )
-		{
-			SpawnBlood( vecOrigin, vecDir, blood, flDistance );// a little surface blood.
+		if ( blood != DONT_BLEED ) {
+			SpawnBlood( vecOrigin, vecDir, blood, flDistance ); // a little surface blood. #V
 			TraceBleed( flDistance, vecDir, ptr, info.GetDamageType() );
 		}
 	}
 }
 
 
-C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
-{
-	return (C_HL2MP_Player*)C_BasePlayer::GetLocalPlayer();
-}
+C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer() { return (C_HL2MP_Player*)C_BasePlayer::GetLocalPlayer(); }
 
-void C_HL2MP_Player::Initialize( void )
-{
+void C_HL2MP_Player::Initialize( void ) {
 	m_headYawPoseParam = LookupPoseParameter( "head_yaw" );
 	GetPoseParameterRange( m_headYawPoseParam, m_headYawMin, m_headYawMax );
 
@@ -152,26 +123,18 @@ void C_HL2MP_Player::Initialize( void )
 
 	CStudioHdr *hdr = GetModelPtr();
 	for ( int i = 0; i < hdr->GetNumPoseParameters() ; i++ )
-	{
 		SetPoseParameter( hdr, i, 0.0 );
-	}
 }
 
-CStudioHdr *C_HL2MP_Player::OnNewModel( void )
-{
-	CStudioHdr *hdr = BaseClass::OnNewModel();
+CStudioHdr *C_HL2MP_Player::OnNewModel( void ) {
 	
+	CStudioHdr *hdr = BaseClass::OnNewModel();
 	Initialize( );
-
 	return hdr;
 }
 
-//-----------------------------------------------------------------------------
-/**
- * Orient head and eyes towards m_lookAt.
- */
-void C_HL2MP_Player::UpdateLookAt( void )
-{
+/* Orient head and eyes towards m_lookAt. */
+void C_HL2MP_Player::UpdateLookAt( void ) {
 	// head yaw
 	if (m_headYawPoseParam < 0 || m_headPitchPoseParam < 0)
 		return;
@@ -180,8 +143,7 @@ void C_HL2MP_Player::UpdateLookAt( void )
 	m_viewtarget = m_vLookAtTarget;
 
 	// blinking
-	if (m_blinkTimer.IsElapsed())
-	{
+	if (m_blinkTimer.IsElapsed()) {
 		m_blinktoggle = !m_blinktoggle;
 		m_blinkTimer.Start( RandomFloat( 1.5f, 4.0f ) );
 	}
@@ -195,10 +157,8 @@ void C_HL2MP_Player::UpdateLookAt( void )
 	QAngle bodyAngles( 0, 0, 0 );
 	bodyAngles[YAW] = GetLocalAngles()[YAW];
 
-
 	float flBodyYawDiff = bodyAngles[YAW] - m_flLastBodyYaw;
 	m_flLastBodyYaw = bodyAngles[YAW];
-	
 
 	// Set the head's yaw.
 	float desired = AngleNormalize( desiredAngles[YAW] - bodyAngles[YAW] );
@@ -210,7 +170,6 @@ void C_HL2MP_Player::UpdateLookAt( void )
 	desired = clamp( desired, m_headYawMin, m_headYawMax );
 	
 	SetPoseParameter( m_headYawPoseParam, m_flCurrentHeadYaw );
-
 	
 	// Set the head's yaw.
 	desired = AngleNormalize( desiredAngles[PITCH] );
@@ -543,7 +502,7 @@ float C_HL2MP_Player::GetFOV( void )
 
 //=========================================================
 // Autoaim
-// set crosshair position to point to enemey
+// set crosshair position to point to enemy
 //=========================================================
 Vector C_HL2MP_Player::GetAutoaimVector( float flDelta )
 {

@@ -1,16 +1,14 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
-//
-//=============================================================================
+// FPC
+
 #ifndef BASEMULTIPLAYERPLAYER_H
 #define BASEMULTIPLAYERPLAYER_H
-#pragma once
+#pragma once // restricts the compiler to a single inclusion of this header
 
 #include "player.h"
 #include "ai_speech.h"
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
+// Purpose: declaration of player interactions unique to TF2
 class CBaseMultiplayerPlayer : public CAI_ExpresserHost<CBasePlayer>
 {
 
@@ -21,37 +19,35 @@ public:
 	CBaseMultiplayerPlayer();
 	~CBaseMultiplayerPlayer();
 
-	virtual void		Spawn( void );
+	virtual void	Spawn( void );
 
-	virtual void		PostConstructor( const char *szClassname );
-	virtual void		ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet );
+	virtual void	PostConstructor( const char *szClassname );
+	virtual void	ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet );
 
-	virtual bool			SpeakIfAllowed( AIConcept_t concept, const char *modifiers = NULL, char *pszOutResponseChosen = NULL, size_t bufsize = 0, IRecipientFilter *filter = NULL );
+	virtual bool	SpeakIfAllowed( AIConcept_t concept, const char *modifiers = NULL, char *pszOutResponseChosen = NULL, size_t bufsize = 0, IRecipientFilter *filter = NULL );
 	virtual IResponseSystem *GetResponseSystem();
-	bool					SpeakConcept( AI_Response& response, int iConcept );
-	virtual bool			SpeakConceptIfAllowed( int iConcept, const char *modifiers = NULL, char *pszOutResponseChosen = NULL, size_t bufsize = 0, IRecipientFilter *filter = NULL );
+	bool			SpeakConcept( AI_Response& response, int iConcept );
+	virtual bool	SpeakConceptIfAllowed( int iConcept, const char *modifiers = NULL, char *pszOutResponseChosen = NULL, size_t bufsize = 0, IRecipientFilter *filter = NULL );
 
-	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
-	virtual bool		CanSpeak( void ) { return true; }
-	virtual bool		CanBeAutobalanced() { return true; }
+	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
+	virtual bool	CanSpeak( void ) { return true; }
+	virtual bool	CanBeAutobalanced() { return true; }
 
-	virtual void		Precache( void )
-	{
+	virtual void	Precache( void ) {
 		PrecacheParticleSystem( "achieved" );
-
 		BaseClass::Precache();
 	}
 
-	virtual bool		ClientCommand( const CCommand &args );
+	virtual bool	ClientCommand( const CCommand &args );
 
-	virtual bool		CanSpeakVoiceCommand( void ) { return true; }
-	virtual bool		ShouldShowVoiceSubtitleToEnemy( void );
-	virtual void		NoteSpokeVoiceCommand( const char *pszScenePlayed ) {}
+	virtual bool	CanSpeakVoiceCommand( void ) { return true; }
+	virtual bool	ShouldShowVoiceSubtitleToEnemy( void );
+	virtual void	NoteSpokeVoiceCommand( const char *pszScenePlayed ) {}
 
 	virtual void OnAchievementEarned( int iAchievement ) {}
 
-	enum
-	{
+	//? Don't you need to attach a name to an enum statement?
+	enum {
 		CHAT_IGNORE_NONE = 0,
 		CHAT_IGNORE_ALL,
 		CHAT_IGNORE_TEAM,
@@ -92,9 +88,10 @@ public:
 	bool ShouldRunRateLimitedCommand( const char *pszCommand );
 
 protected:
-	virtual CAI_Expresser *CreateExpresser( void );
 
-	int		m_iCurrentConcept;
+	virtual CAI_Expresser *CreateExpresser( void );
+	int	m_iCurrentConcept;
+
 private:
 	//---------------------------------
 	CMultiplayer_Expresser		*m_pExpresser;
