@@ -180,34 +180,29 @@ void C_HL2MP_Player::UpdateLookAt( void ) {
 	SetPoseParameter( m_headPitchPoseParam, m_flCurrentHeadPitch );
 }
 
-void C_HL2MP_Player::ClientThink( void )
-{
+void C_HL2MP_Player::ClientThink( void ) {
 	bool bFoundViewTarget = false;
 	
 	Vector vForward;
 	AngleVectors( GetLocalAngles(), &vForward );
 
-	for( int iClient = 1; iClient <= gpGlobals->maxClients; ++iClient )
-	{
+	for ( int iClient = 1; iClient <= gpGlobals->maxClients; ++iClient ) {
 		CBaseEntity *pEnt = UTIL_PlayerByIndex( iClient );
-		if(!pEnt || !pEnt->IsPlayer())
-			continue;
 
-		if ( pEnt->entindex() == entindex() )
-			continue;
+		if(!pEnt || !pEnt->IsPlayer()) continue;
+
+		if ( pEnt->entindex() == entindex() ) continue;
 
 		Vector vTargetOrigin = pEnt->GetAbsOrigin();
 		Vector vMyOrigin =  GetAbsOrigin();
 
 		Vector vDir = vTargetOrigin - vMyOrigin;
 		
-		if ( vDir.Length() > 128 ) 
-			continue;
+		if ( vDir.Length() > 128 ) continue;
 
 		VectorNormalize( vDir );
 
-		if ( DotProduct( vForward, vDir ) < 0.0f )
-			 continue;
+		if ( DotProduct( vForward, vDir ) < 0.0f ) continue;
 
 		m_vLookAtTarget = pEnt->EyePosition();
 		bFoundViewTarget = true;
@@ -215,38 +210,24 @@ void C_HL2MP_Player::ClientThink( void )
 	}
 
 	if ( bFoundViewTarget == false )
-	{
 		m_vLookAtTarget = GetAbsOrigin() + vForward * 512;
-	}
 
 	UpdateIDTarget();
 }
 
-//-----------------------------------------------------------------------------
 // Purpose: 
-//-----------------------------------------------------------------------------
-int C_HL2MP_Player::DrawModel( int flags )
-{
-	if ( !m_bReadyToDraw )
-		return 0;
+int C_HL2MP_Player::DrawModel( int flags ) {
+	if ( !m_bReadyToDraw ) return 0;
 
     return BaseClass::DrawModel(flags);
 }
 
-//-----------------------------------------------------------------------------
 // Should this object receive shadows?
-//-----------------------------------------------------------------------------
-bool C_HL2MP_Player::ShouldReceiveProjectedTextures( int flags )
-{
+bool C_HL2MP_Player::ShouldReceiveProjectedTextures( int flags ) {
 	Assert( flags & SHADOW_FLAGS_PROJECTED_TEXTURE_TYPE_MASK );
 
-	if ( IsEffectActive( EF_NODRAW ) )
-		 return false;
-
-	if( flags & SHADOW_FLAGS_FLASHLIGHT )
-	{
-		return true;
-	}
+	if ( IsEffectActive( EF_NODRAW ) ) return false;
+	if( flags & SHADOW_FLAGS_FLASHLIGHT ) return true;
 
 	return BaseClass::ShouldReceiveProjectedTextures( flags );
 }
