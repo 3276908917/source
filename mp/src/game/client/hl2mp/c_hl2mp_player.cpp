@@ -232,10 +232,8 @@ bool C_HL2MP_Player::ShouldReceiveProjectedTextures( int flags ) {
 	return BaseClass::ShouldReceiveProjectedTextures( flags );
 }
 
-void C_HL2MP_Player::DoImpactEffect( trace_t &tr, int nDamageType )
-{
-	if ( GetActiveWeapon() )
-	{
+void C_HL2MP_Player::DoImpactEffect( trace_t &tr, int nDamageType ) {
+	if ( GetActiveWeapon() ) {
 		GetActiveWeapon()->DoImpactEffect( tr, nDamageType );
 		return;
 	}
@@ -243,23 +241,16 @@ void C_HL2MP_Player::DoImpactEffect( trace_t &tr, int nDamageType )
 	BaseClass::DoImpactEffect( tr, nDamageType );
 }
 
-void C_HL2MP_Player::PreThink( void )
-{
+void C_HL2MP_Player::PreThink( void ) {
 	QAngle vTempAngles = GetLocalAngles();
 
 	if ( GetLocalPlayer() == this )
-	{
 		vTempAngles[PITCH] = EyeAngles()[PITCH];
-	}
 	else
-	{
 		vTempAngles[PITCH] = m_angEyeAngles[PITCH];
-	}
 
 	if ( vTempAngles[YAW] < 0.0f )
-	{
 		vTempAngles[YAW] += 360.0f;
-	}
 
 	SetLocalAngles( vTempAngles );
 
