@@ -1,8 +1,8 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
+// Why displacing by a line (up here) causes errors?
+// Purpose:	Player for HL2. #V
+// Much of this file concerns content we will overwrite later, e.g. hard-coded available models and weapons
 //
-// Purpose:		Player for HL2.
-//
-//=============================================================================//
 
 #include "cbase.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
@@ -29,11 +29,11 @@
 int g_iLastCitizenModel = 0;
 int g_iLastCombineModel = 0;
 
-CBaseEntity	 *g_pLastCombineSpawn = NULL;
-CBaseEntity	 *g_pLastRebelSpawn = NULL;
-extern CBaseEntity				*g_pLastSpawn;
+CBaseEntity *g_pLastCombineSpawn = NULL;
+CBaseEntity *g_pLastRebelSpawn = NULL;
+extern CBaseEntity *g_pLastSpawn;
 
-#define HL2MP_COMMAND_MAX_RATE 0.3
+static const float HL2MP_COMMAND_MAX_RATE = 0.3;
 
 void DropPrimedFragGrenade( CHL2MP_Player *pPlayer, CBaseCombatWeapon *pGrenade );
 
@@ -87,24 +87,22 @@ const char *g_ppszRandomCombineModels[] =
 	"models/police.mdl",
 };
 
+/* POTENTIAL ERROR */
+// I am changing this define to char -- this may cause some comparison errors in runtime
+static const char MAX_COMBINE_MODELS = 4;
+static const float MODEL_CHANGE_INTERVAL = 5.0f;
+static const float TEAM_CHANGE_INTERVAL = 5.0f;
 
-#define MAX_COMBINE_MODELS 4
-#define MODEL_CHANGE_INTERVAL 5.0f
-#define TEAM_CHANGE_INTERVAL 5.0f
-
-#define HL2MPPLAYER_PHYSDAMAGE_SCALE 4.0f
+static const float HL2MPPLAYER_PHYSDAMAGE_SCALE = 4.0f;
 
 #pragma warning( disable : 4355 )
 
-CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
-{
+CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this ) {
 	m_angEyeAngles.Init();
 
 	m_iLastWeaponFireUsercmd = 0;
-
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
-
 	m_iSpawnInterpCounter = 0;
 
     m_bEnterObserver = false;
@@ -115,26 +113,21 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 //	UseClientSideAnimation();
 }
 
-CHL2MP_Player::~CHL2MP_Player( void )
-{
+// Destructor
+CHL2MP_Player::~CHL2MP_Player( void ) {}
 
-}
-
-void CHL2MP_Player::UpdateOnRemove( void )
-{
-	if ( m_hRagdoll )
-	{
+void CHL2MP_Player::UpdateOnRemove( void ) {
+	if ( m_hRagdoll ) {
 		UTIL_RemoveImmediate( m_hRagdoll );
 		m_hRagdoll = NULL;
 	}
-
 	BaseClass::UpdateOnRemove();
 }
 
-void CHL2MP_Player::Precache( void )
-{
+void CHL2MP_Player::Precache( void ) {
 	BaseClass::Precache();
 
+	//? Model precache on a sprite?
 	PrecacheModel ( "sprites/glow01.vmt" );
 
 	//Precache Citizen models
@@ -157,8 +150,7 @@ void CHL2MP_Player::Precache( void )
 	PrecacheScriptSound( "NPC_Citizen.die" );
 }
 
-void CHL2MP_Player::GiveAllItems( void )
-{
+void CHL2MP_Player::GiveAllItems( void ) {
 	EquipSuit();
 
 	CBasePlayer::GiveAmmo( 255,	"Pistol");
@@ -191,11 +183,9 @@ void CHL2MP_Player::GiveAllItems( void )
 	GiveNamedItem( "weapon_slam" );
 
 	GiveNamedItem( "weapon_physcannon" );
-	
 }
 
-void CHL2MP_Player::GiveDefaultItems( void )
-{
+void CHL2MP_Player::GiveDefaultItems( void ) {
 	EquipSuit();
 
 	CBasePlayer::GiveAmmo( 255,	"Pistol");
@@ -205,13 +195,9 @@ void CHL2MP_Player::GiveDefaultItems( void )
 	CBasePlayer::GiveAmmo( 6,	"357" );
 
 	if ( GetPlayerModelType() == PLAYER_SOUNDS_METROPOLICE || GetPlayerModelType() == PLAYER_SOUNDS_COMBINESOLDIER )
-	{
 		GiveNamedItem( "weapon_stunstick" );
-	}
 	else if ( GetPlayerModelType() == PLAYER_SOUNDS_CITIZEN )
-	{
 		GiveNamedItem( "weapon_crowbar" );
-	}
 	
 	GiveNamedItem( "weapon_pistol" );
 	GiveNamedItem( "weapon_smg1" );
@@ -221,25 +207,17 @@ void CHL2MP_Player::GiveDefaultItems( void )
 	const char *szDefaultWeaponName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_defaultweapon" );
 
 	CBaseCombatWeapon *pDefaultWeapon = Weapon_OwnsThisType( szDefaultWeaponName );
-
+	// ??
 	if ( pDefaultWeapon )
-	{
 		Weapon_Switch( pDefaultWeapon );
-	}
 	else
-	{
 		Weapon_Switch( Weapon_OwnsThisType( "weapon_physcannon" ) );
-	}
 }
 
-void CHL2MP_Player::PickDefaultSpawnTeam( void )
-{
-	if ( GetTeamNumber() == 0 )
-	{
+void CHL2MP_Player::PickDefaultSpawnTeam( void ) {
+	if ( GetTeamNumber() == 0 ) {
 		if ( HL2MPRules()->IsTeamplay() == false )
-		{
-			if ( GetModelPtr() == NULL )
-			{
+			if ( GetModelPtr() == NULL ) {
 				const char *szModelName = NULL;
 				szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
 
@@ -253,40 +231,26 @@ void CHL2MP_Player::PickDefaultSpawnTeam( void )
 
 				ChangeTeam( TEAM_UNASSIGNED );
 			}
-		}
-		else
-		{
+		else {
 			CTeam *pCombine = g_Teams[TEAM_COMBINE];
 			CTeam *pRebels = g_Teams[TEAM_REBELS];
 
 			if ( pCombine == NULL || pRebels == NULL )
-			{
 				ChangeTeam( random->RandomInt( TEAM_COMBINE, TEAM_REBELS ) );
-			}
-			else
-			{
+			else {
 				if ( pCombine->GetNumPlayers() > pRebels->GetNumPlayers() )
-				{
 					ChangeTeam( TEAM_REBELS );
-				}
 				else if ( pCombine->GetNumPlayers() < pRebels->GetNumPlayers() )
-				{
 					ChangeTeam( TEAM_COMBINE );
-				}
 				else
-				{
 					ChangeTeam( random->RandomInt( TEAM_COMBINE, TEAM_REBELS ) );
-				}
 			}
 		}
 	}
 }
 
-//-----------------------------------------------------------------------------
 // Purpose: Sets HL2 specific defaults.
-//-----------------------------------------------------------------------------
-void CHL2MP_Player::Spawn(void)
-{
+void CHL2MP_Player::Spawn(void) {
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
 
@@ -294,13 +258,10 @@ void CHL2MP_Player::Spawn(void)
 
 	BaseClass::Spawn();
 	
-	if ( !IsObserver() )
-	{
+	if ( !IsObserver() ) {
 		pl.deadflag = false;
 		RemoveSolidFlags( FSOLID_NOT_SOLID );
-
 		RemoveEffects( EF_NODRAW );
-		
 		GiveDefaultItems();
 	}
 
@@ -316,56 +277,38 @@ void CHL2MP_Player::Spawn(void)
 	m_impactEnergyScale = HL2MPPLAYER_PHYSDAMAGE_SCALE;
 
 	if ( HL2MPRules()->IsIntermission() )
-	{
 		AddFlag( FL_FROZEN );
-	}
 	else
-	{
 		RemoveFlag( FL_FROZEN );
-	}
 
-	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8;
+	m_iSpawnInterpCounter = (m_iSpawnInterpCounter + 1) % 8; // hard-coded values? #L
 
 	m_Local.m_bDucked = false;
-
 	SetPlayerUnderwater(false);
-
 	m_bReady = false;
 }
 
-void CHL2MP_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
-{
-	
-}
+// Why is this method empty?
+void CHL2MP_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize ) {}
 
-bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )
-{
+bool CHL2MP_Player::ValidatePlayerModel( const char *pModel ) {
 	int iModels = ARRAYSIZE( g_ppszRandomCitizenModels );
 	int i;	
 
 	for ( i = 0; i < iModels; ++i )
-	{
 		if ( !Q_stricmp( g_ppszRandomCitizenModels[i], pModel ) )
-		{
 			return true;
-		}
-	}
 
 	iModels = ARRAYSIZE( g_ppszRandomCombineModels );
 
 	for ( i = 0; i < iModels; ++i )
-	{
 	   	if ( !Q_stricmp( g_ppszRandomCombineModels[i], pModel ) )
-		{
 			return true;
-		}
-	}
 
 	return false;
 }
 
-void CHL2MP_Player::SetPlayerTeamModel( void )
-{
+void CHL2MP_Player::SetPlayerTeamModel( void ) {
 	const char *szModelName = NULL;
 	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
 

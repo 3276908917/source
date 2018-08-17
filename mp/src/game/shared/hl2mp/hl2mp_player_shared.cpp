@@ -220,10 +220,7 @@ void CPlayerAnimState::EstimateYaw( void )
 {
 	float dt = gpGlobals->frametime;
 
-	if ( !dt )
-	{
-		return;
-	}
+	if ( !dt ) return;
 
 	Vector est_velocity;
 	QAngle	angles;

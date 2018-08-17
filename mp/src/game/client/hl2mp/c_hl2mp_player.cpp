@@ -1,5 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 // Purpose:		Player for HL2MP.
+// FPC
 
 #include "cbase.h"
 #include "vcollide_parse.h"
@@ -399,12 +400,11 @@ void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
 		ResetLatched();
 		m_iSpawnInterpCounterCache = m_iSpawnInterpCounter;
 	}
-
 	BaseClass::PostDataUpdate( updateType );
 }
 
 void C_HL2MP_Player::ReleaseFlashlight( void ) {
-	if( m_pFlashlightBeam ) {
+	if ( m_pFlashlightBeam ) {
 		m_pFlashlightBeam->flags = 0;
 		m_pFlashlightBeam->die = gpGlobals->curtime - 1;
 		m_pFlashlightBeam = NULL;
@@ -414,51 +414,37 @@ void C_HL2MP_Player::ReleaseFlashlight( void ) {
 float C_HL2MP_Player::GetFOV( void ) {
 	//Find our FOV with offset zoom value
 	float flFOVOffset = C_BasePlayer::GetFOV() + GetZoom();
-
 	// Clamp FOV in MP
 	int min_fov = GetMinFOV();
-	
 	// Don't let it go too low
 	flFOVOffset = MAX( min_fov, flFOVOffset );
 
 	return flFOVOffset;
 }
 
-//=========================================================
+/* This should come in handy when we implement lock-on mechanics #L */
 // Autoaim
 // set crosshair position to point to enemy
-//=========================================================
-Vector C_HL2MP_Player::GetAutoaimVector( float flDelta )
-{
+Vector C_HL2MP_Player::GetAutoaimVector( float flDelta ) {
 	// Never autoaim a predicted weapon (for now)
 	Vector	forward;
 	AngleVectors( EyeAngles() + m_Local.m_vecPunchAngle, &forward );
 	return	forward;
 }
 
-//-----------------------------------------------------------------------------
 // Purpose: Returns whether or not we are allowed to sprint now.
-//-----------------------------------------------------------------------------
-bool C_HL2MP_Player::CanSprint( void )
-{
+bool C_HL2MP_Player::CanSprint( void ) {
 	return ( (!m_Local.m_bDucked && !m_Local.m_bDucking) && (GetWaterLevel() != 3) );
 }
 
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void C_HL2MP_Player::StartSprinting( void )
-{
-	if( m_HL2Local.m_flSuitPower < 10 )
-	{
-		// Don't sprint unless there's a reasonable
-		// amount of suit power.
+void C_HL2MP_Player::StartSprinting( void ) {
+	if( m_HL2Local.m_flSuitPower < 10 ) {
+		// Don't sprint unless there's a reasonable amount of suit power. #V
 		CPASAttenuationFilter filter( this );
 		filter.UsePredictionRules();
 		EmitSound( filter, entindex(), "HL2Player.SprintNoPower" );
 		return;
 	}
-
 	CPASAttenuationFilter filter( this );
 	filter.UsePredictionRules();
 	EmitSound( filter, entindex(), "HL2Player.SprintStart" );
@@ -467,36 +453,23 @@ void C_HL2MP_Player::StartSprinting( void )
 	m_fIsSprinting = true;
 }
 
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void C_HL2MP_Player::StopSprinting( void )
-{
+void C_HL2MP_Player::StopSprinting( void ) {
 	SetMaxSpeed( HL2_NORM_SPEED );
 	m_fIsSprinting = false;
 }
 
-void C_HL2MP_Player::HandleSpeedChanges( void )
-{
+void C_HL2MP_Player::HandleSpeedChanges( void ) {
 	int buttonsChanged = m_afButtonPressed | m_afButtonReleased;
 
-	if( buttonsChanged & IN_SPEED )
-	{
+	if( buttonsChanged & IN_SPEED ) {
 		// The state of the sprint/run button has changed.
-		if ( IsSuitEquipped() )
-		{
+		if ( IsSuitEquipped() ) {
 			if ( !(m_afButtonPressed & IN_SPEED)  && IsSprinting() )
-			{
 				StopSprinting();
-			}
-			else if ( (m_afButtonPressed & IN_SPEED) && !IsSprinting() )
-			{
+			else if ( (m_afButtonPressed & IN_SPEED) && !IsSprinting() ) {
 				if ( CanSprint() )
-				{
 					StartSprinting();
-				}
-				else
-				{
+				else {
 					// Reset key, so it will be activated post whatever is suppressing it.
 					m_nButtons &= ~IN_SPEED;
 				}
@@ -504,84 +477,59 @@ void C_HL2MP_Player::HandleSpeedChanges( void )
 		}
 	}
 	else if( buttonsChanged & IN_WALK )
-	{
-		if ( IsSuitEquipped() )
-		{
+		if ( IsSuitEquipped() ) {
 			// The state of the WALK button has changed. 
 			if( IsWalking() && !(m_afButtonPressed & IN_WALK) )
-			{
 				StopWalking();
-			}
 			else if( !IsWalking() && !IsSprinting() && (m_afButtonPressed & IN_WALK) && !(m_nButtons & IN_DUCK) )
-			{
 				StartWalking();
-			}
 		}
-	}
 
 	if ( IsSuitEquipped() && m_fIsWalking && !(m_nButtons & IN_WALK)  ) 
 		StopWalking();
 }
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void C_HL2MP_Player::StartWalking( void )
-{
+void C_HL2MP_Player::StartWalking( void ) {
 	SetMaxSpeed( HL2_WALK_SPEED );
 	m_fIsWalking = true;
 }
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void C_HL2MP_Player::StopWalking( void )
-{
+void C_HL2MP_Player::StopWalking( void ) {
 	SetMaxSpeed( HL2_NORM_SPEED );
 	m_fIsWalking = false;
 }
 
-void C_HL2MP_Player::ItemPreFrame( void )
-{
-	if ( GetFlags() & FL_FROZEN )
-		 return;
-
-	// Disallow shooting while zooming
-	if ( m_nButtons & IN_ZOOM )
-	{
-		//FIXME: Held weapons like the grenade get sad when this happens
+void C_HL2MP_Player::ItemPreFrame( void ) {
+	if ( GetFlags() & FL_FROZEN ) return;
+	// Disallow shooting while zooming #V
+	if ( m_nButtons & IN_ZOOM ) {
+		//FIXME: Held weapons like the grenade get sad when this happens #V
 		m_nButtons &= ~(IN_ATTACK|IN_ATTACK2);
 	}
-
 	BaseClass::ItemPreFrame();
-
 }
 	
-void C_HL2MP_Player::ItemPostFrame( void )
-{
-	if ( GetFlags() & FL_FROZEN )
-		 return;
+void C_HL2MP_Player::ItemPostFrame( void ) {
+	if ( GetFlags() & FL_FROZEN ) return;
 
 	BaseClass::ItemPostFrame();
 }
 
-C_BaseAnimating *C_HL2MP_Player::BecomeRagdollOnClient()
-{
-	// Let the C_CSRagdoll entity do this.
+// Purpose? #L
+C_BaseAnimating *C_HL2MP_Player::BecomeRagdollOnClient() {
+	// Let the C_CSRagdoll entity do this. #V
 	// m_builtRagdoll = true;
 	return NULL;
 }
 
-void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
-{
-	if ( m_lifeState != LIFE_ALIVE && !IsObserver() )
-	{
+void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov ) {
+	if ( m_lifeState != LIFE_ALIVE && !IsObserver() ) {
 		Vector origin = EyePosition();			
-
 		IRagdoll *pRagdoll = GetRepresentativeRagdoll();
 
-		if ( pRagdoll )
-		{
+		if ( pRagdoll ) {
 			origin = pRagdoll->GetRagdollOrigin();
-			origin.z += VEC_DEAD_VIEWHEIGHT_SCALED( this ).z; // look over ragdoll, not through
+			origin.z += VEC_DEAD_VIEWHEIGHT_SCALED( this ).z; // look over ragdoll, not through #V
 		}
 
 		BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
@@ -603,32 +551,22 @@ void C_HL2MP_Player::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNea
 		C_BaseEntity::PopEnableAbsRecomputations();
 
 		if (trace.fraction < 1.0)
-		{
 			eyeOrigin = trace.endpos;
-		}
 		
 		return;
 	}
-
 	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
 }
 
-IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
-{
-	if ( m_hRagdoll.Get() )
-	{
+IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const {
+	if ( m_hRagdoll.Get() ) {
 		C_HL2MPRagdoll *pRagdoll = (C_HL2MPRagdoll*)m_hRagdoll.Get();
-
 		return pRagdoll->GetIRagdoll();
 	}
-	else
-	{
-		return NULL;
-	}
+	else return NULL;
 }
 
 //HL2MPRAGDOLL
-
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_HL2MPRagdoll, DT_HL2MPRagdoll, CHL2MPRagdoll )
 	RecvPropVector( RECVINFO(m_vecRagdollOrigin) ),
@@ -640,26 +578,17 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_HL2MPRagdoll, DT_HL2MPRagdoll, CHL2MPRagdoll 
 END_RECV_TABLE()
 
 
+C_HL2MPRagdoll::C_HL2MPRagdoll() {}
 
-C_HL2MPRagdoll::C_HL2MPRagdoll()
-{
-
-}
-
-C_HL2MPRagdoll::~C_HL2MPRagdoll()
-{
+C_HL2MPRagdoll::~C_HL2MPRagdoll() {
 	PhysCleanupFrictionSounds( this );
 
 	if ( m_hPlayer )
-	{
 		m_hPlayer->CreateModelInstance();
-	}
 }
 
-void C_HL2MPRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity )
-{
-	if ( !pSourceEntity )
-		return;
+void C_HL2MPRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity ) {
+	if ( !pSourceEntity ) return;
 	
 	VarMapping_t *pSrc = pSourceEntity->GetVarMapping();
 	VarMapping_t *pDest = GetVarMapping();
@@ -685,26 +614,23 @@ void C_HL2MPRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, const char *
 {
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
 
-	if( !pPhysicsObject )
-		return;
+	if( !pPhysicsObject ) return;
 
 	Vector dir = pTrace->endpos - pTrace->startpos;
 
-	if ( iDamageType == DMG_BLAST )
-	{
-		dir *= 4000;  // adjust impact strenght
+	if ( iDamageType == DMG_BLAST ) {
+		dir *= 4000;  // adjust impact strength
 				
 		// apply force at object mass center
 		pPhysicsObject->ApplyForceCenter( dir );
-	}
-	else
-	{
+	} 
+	else {
 		Vector hitpos;  
 	
 		VectorMA( pTrace->startpos, pTrace->fraction, dir, hitpos );
 		VectorNormalize( dir );
 
-		dir *= 4000;  // adjust impact strenght
+		dir *= 4000;  // adjust impact strength
 
 		// apply force where we hit it
 		pPhysicsObject->ApplyForceOffset( dir, hitpos );	
@@ -717,14 +643,12 @@ void C_HL2MPRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, const char *
 }
 
 
-void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
-{
+void C_HL2MPRagdoll::CreateHL2MPRagdoll( void ) {
 	// First, initialize all our data. If we have the player's entity on our client,
 	// then we can make ourselves start out exactly where the player is.
 	C_HL2MP_Player *pPlayer = dynamic_cast< C_HL2MP_Player* >( m_hPlayer.Get() );
 	
-	if ( pPlayer && !pPlayer->IsDormant() )
-	{
+	if ( pPlayer && !pPlayer->IsDormant() ) {
 		// move my current model instance to the ragdoll's so decals are preserved.
 		pPlayer->SnatchModelInstance( this );
 
@@ -733,8 +657,7 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 		// Copy all the interpolated vars from the player entity.
 		// The entity uses the interpolated history to get bone velocity.
 		bool bRemotePlayer = (pPlayer != C_BasePlayer::GetLocalPlayer());			
-		if ( bRemotePlayer )
-		{
+		if ( bRemotePlayer ) {
 			Interp_Copy( pPlayer );
 
 			SetAbsAngles( pPlayer->GetRenderAngles() );
@@ -744,31 +667,26 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 			SetSequence( pPlayer->GetSequence() );
 			m_flPlaybackRate = pPlayer->GetPlaybackRate();
 		}
-		else
-		{
+		else {
 			// This is the local player, so set them in a default
 			// pose and slam their velocity, angles and origin
 			SetAbsOrigin( m_vecRagdollOrigin );
-			
 			SetAbsAngles( pPlayer->GetRenderAngles() );
-
 			SetAbsVelocity( m_vecRagdollVelocity );
 
 			int iSeq = pPlayer->GetSequence();
-			if ( iSeq == -1 )
-			{
+			if ( iSeq == -1 ) {
 				Assert( false );	// missing walk_lower?
 				iSeq = 0;
 			}
-			
+
 			SetSequence( iSeq );	// walk_lower, basic pose
 			SetCycle( 0.0 );
 
 			Interp_Reset( varMap );
 		}		
 	}
-	else
-	{
+	else {
 		// overwrite network origin so later interpolation will
 		// use this position
 		SetNetworkOrigin( m_vecRagdollOrigin );
@@ -791,66 +709,47 @@ void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 	const float boneDt = 0.05f;
 
 	if ( pPlayer && !pPlayer->IsDormant() )
-	{
 		pPlayer->GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
-	}
 	else
-	{
 		GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
-	}
 
 	InitAsClientRagdoll( boneDelta0, boneDelta1, currentBones, boneDt );
 }
 
 
-void C_HL2MPRagdoll::OnDataChanged( DataUpdateType_t type )
-{
+void C_HL2MPRagdoll::OnDataChanged( DataUpdateType_t type ) {
 	BaseClass::OnDataChanged( type );
 
 	if ( type == DATA_UPDATE_CREATED )
-	{
 		CreateHL2MPRagdoll();
-	}
 }
 
-IRagdoll* C_HL2MPRagdoll::GetIRagdoll() const
-{
-	return m_pRagdoll;
-}
+IRagdoll* C_HL2MPRagdoll::GetIRagdoll() const {	return m_pRagdoll; }
 
-void C_HL2MPRagdoll::UpdateOnRemove( void )
-{
+void C_HL2MPRagdoll::UpdateOnRemove( void ) {
 	VPhysicsSetObject( NULL );
-
 	BaseClass::UpdateOnRemove();
 }
 
-//-----------------------------------------------------------------------------
 // Purpose: clear out any face/eye values stored in the material system
-//-----------------------------------------------------------------------------
-void C_HL2MPRagdoll::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights )
-{
+void C_HL2MPRagdoll::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights ) {
 	BaseClass::SetupWeights( pBoneToWorld, nFlexWeightCount, pFlexWeights, pFlexDelayedWeights );
 
 	static float destweight[128];
 	static bool bIsInited = false;
 
 	CStudioHdr *hdr = GetModelPtr();
-	if ( !hdr )
-		return;
+	if ( !hdr ) return;
 
 	int nFlexDescCount = hdr->numflexdesc();
-	if ( nFlexDescCount )
-	{
+	if ( nFlexDescCount ) {
 		Assert( !pFlexDelayedWeights );
 		memset( pFlexWeights, 0, nFlexWeightCount * sizeof(float) );
 	}
 
-	if ( m_iEyeAttachment > 0 )
-	{
+	if ( m_iEyeAttachment > 0 ) {
 		matrix3x4_t attToWorld;
-		if (GetAttachment( m_iEyeAttachment, attToWorld ))
-		{
+		if (GetAttachment( m_iEyeAttachment, attToWorld )) {
 			Vector local, tmp;
 			local.Init( 1000.0f, 0.0f, 0.0f );
 			VectorTransform( local, attToWorld, tmp );
@@ -859,10 +758,8 @@ void C_HL2MPRagdoll::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWei
 	}
 }
 
-void C_HL2MP_Player::PostThink( void )
-{
+void C_HL2MP_Player::PostThink( void ) {
 	BaseClass::PostThink();
-
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 }
