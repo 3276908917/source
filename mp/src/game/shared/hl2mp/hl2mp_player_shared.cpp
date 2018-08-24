@@ -27,18 +27,15 @@ const char *g_ppszPlayerSoundPrefixNames[PLAYER_SOUNDS_MAX] =
 	"NPC_MetroPolice",
 };
 
-const char *CHL2MP_Player::GetPlayerModelSoundPrefix( void )
-{
+const char *CHL2MP_Player::GetPlayerModelSoundPrefix( void ) {
 	return g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType];
 }
 
-void CHL2MP_Player::PrecacheFootStepSounds( void )
-{
+void CHL2MP_Player::PrecacheFootStepSounds( void ) {
 	int iFootstepSounds = ARRAYSIZE( g_ppszPlayerSoundPrefixNames );
 	int i;
 
-	for ( i = 0; i < iFootstepSounds; ++i )
-	{
+	for ( i = 0; i < iFootstepSounds; ++i ) {
 		char szFootStepName[128];
 
 		Q_snprintf( szFootStepName, sizeof( szFootStepName ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[i] );
@@ -49,51 +46,41 @@ void CHL2MP_Player::PrecacheFootStepSounds( void )
 	}
 }
 
-//-----------------------------------------------------------------------------
 // Consider the weapon's built-in accuracy, this character's proficiency with
 // the weapon, and the status of the target. Use this information to determine
-// how accurately to shoot at the target.
-//-----------------------------------------------------------------------------
-Vector CHL2MP_Player::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget )
-{
+// how accurately to shoot at the target. #V
+// "Weapon proficiency" seems to be an AI variable rather than a scrapped RPG element #L
+Vector CHL2MP_Player::GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget ) {
 	if ( pWeapon )
 		return pWeapon->GetBulletSpread( WEAPON_PROFICIENCY_PERFECT );
 	
 	return VECTOR_CONE_15DEGREES;
 }
 
-//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : step - 
 //			fvol - 
 //			force - force sound to play
-//-----------------------------------------------------------------------------
 void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force )
 {
-	if ( gpGlobals->maxClients > 1 && !sv_footsteps.GetFloat() )
+	if ( gpGlobals->maxClients > 1 && !sv_footsteps.GetFloat() ) 
 		return;
 
 #if defined( CLIENT_DLL )
 	// during prediction play footstep sounds only once
-	if ( !prediction->IsFirstTimePredicted() )
-		return;
+	if ( !prediction->IsFirstTimePredicted() ) return;
 #endif
 
-	if ( GetFlags() & FL_DUCKING )
-		return;
+	if ( GetFlags() & FL_DUCKING ) return;
 
 	m_Local.m_nStepside = !m_Local.m_nStepside;
 
 	char szStepSound[128];
 
 	if ( m_Local.m_nStepside )
-	{
 		Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
-	}
 	else
-	{
 		Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
-	}
 
 	CSoundParameters params;
 	if ( GetParametersForSound( szStepSound, params, NULL ) == false )
@@ -126,13 +113,12 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 // ANIMATION CODE
 //==========================
 
-
+// Below this amount, don't play a turning animation/perform IK #V
+static const float MIN_TURN_ANGLE_REQUIRING_TURN_ANIMATION = 15.0f;
 // Below this many degrees, slow down turning rate linearly
-#define FADE_TURN_DEGREES	45.0f
+static const float FADE_TURN_DEGREES = 45.0f;
 // After this, need to start turning feet
-#define MAX_TORSO_ANGLE		90.0f
-// Below this amount, don't play a turning animation/perform IK
-#define MIN_TURN_ANGLE_REQUIRING_TURN_ANIMATION		15.0f
+static const float MAX_TORSO_ANGLE = 90.0f;
 
 static ConVar tf2_feetyawrunscale( "tf2_feetyawrunscale", "2", FCVAR_REPLICATED, "Multiplier on tf2_feetyawrate to allow turning faster when running." );
 extern ConVar sv_backspeed;
@@ -152,11 +138,8 @@ CPlayerAnimState::CPlayerAnimState( CHL2MP_Player *outer )
 	m_flTurnCorrectionTime = 0.0f;
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CPlayerAnimState::Update()
-{
+// Purpose: some form of refresh?
+void CPlayerAnimState::Update() {
 	m_angRender = GetOuter()->GetLocalAngles();
 	m_angRender[ PITCH ] = m_angRender[ ROLL ] = 0.0f;
 
@@ -169,26 +152,19 @@ void CPlayerAnimState::Update()
 #ifdef CLIENT_DLL
 	GetOuter()->UpdateLookAt();
 #endif
-
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CPlayerAnimState::ComputePlaybackRate()
-{
+//? Purpose: 
+void CPlayerAnimState::ComputePlaybackRate() {
 	// Determine ideal playback rate
 	Vector vel;
 	GetOuterAbsVelocity( vel );
 
 	float speed = vel.Length2D();
-
 	bool isMoving = ( speed > 0.5f ) ? true : false;
-
 	float maxspeed = GetOuter()->GetSequenceGroundSpeed( GetOuter()->GetSequence() );
 	
-	if ( isMoving && ( maxspeed > 0.0f ) )
-	{
+	if ( isMoving && ( maxspeed > 0.0f ) ) {
 		float flFactor = 1.0f;
 
 		// Note this gets set back to 1.0 if sequence changes due to ResetSequenceInfo below
@@ -198,9 +174,7 @@ void CPlayerAnimState::ComputePlaybackRate()
 		// This stuff really should be m_flPlaybackRate = speed / m_flGroundSpeed
 	}
 	else
-	{
 		GetOuter()->SetPlaybackRate( 1.0f );
-	}
 }
 
 //-----------------------------------------------------------------------------

@@ -314,8 +314,7 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 
 	int modelIndex = modelinfo->GetModelIndex( szModelName );
 
-	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false )
-	{
+	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false ) {
 		szModelName = "models/Combine_Soldier.mdl";
 		m_iModelType = TEAM_COMBINE;
 
