@@ -324,10 +324,8 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 		engine->ClientCommand ( edict(), szReturnString );
 	}
 
-	if ( GetTeamNumber() == TEAM_COMBINE )
-	{
-		if ( Q_stristr( szModelName, "models/human") )
-		{
+	if ( GetTeamNumber() == TEAM_COMBINE ) {
+		if ( Q_stristr( szModelName, "models/human") ) {
 			int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
 		
 			g_iLastCombineModel = ( g_iLastCombineModel + 1 ) % nHeads;
@@ -336,10 +334,8 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 
 		m_iModelType = TEAM_COMBINE;
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS )
-	{
-		if ( !Q_stristr( szModelName, "models/human") )
-		{
+	else if ( GetTeamNumber() == TEAM_REBELS ) {
+		if ( !Q_stristr( szModelName, "models/human") ) {
 			int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
 
 			g_iLastCitizenModel = ( g_iLastCitizenModel + 1 ) % nHeads;
@@ -355,21 +351,17 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 	m_flNextModelChangeTime = gpGlobals->curtime + MODEL_CHANGE_INTERVAL;
 }
 
-void CHL2MP_Player::SetPlayerModel( void )
-{
+void CHL2MP_Player::SetPlayerModel( void ) {
 	const char *szModelName = NULL;
 	const char *pszCurrentModelName = modelinfo->GetModelName( GetModel());
 
 	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
 
-	if ( ValidatePlayerModel( szModelName ) == false )
-	{
+	if ( ValidatePlayerModel( szModelName ) == false ) {
 		char szReturnString[512];
 
 		if ( ValidatePlayerModel( pszCurrentModelName ) == false )
-		{
 			pszCurrentModelName = "models/Combine_Soldier.mdl";
-		}
 
 		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", pszCurrentModelName );
 		engine->ClientCommand ( edict(), szReturnString );
@@ -377,8 +369,7 @@ void CHL2MP_Player::SetPlayerModel( void )
 		szModelName = pszCurrentModelName;
 	}
 
-	if ( GetTeamNumber() == TEAM_COMBINE )
-	{
+	if ( GetTeamNumber() == TEAM_COMBINE ) {
 		int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
 		
 		g_iLastCombineModel = ( g_iLastCombineModel + 1 ) % nHeads;
@@ -386,8 +377,7 @@ void CHL2MP_Player::SetPlayerModel( void )
 
 		m_iModelType = TEAM_COMBINE;
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS )
-	{
+	else if ( GetTeamNumber() == TEAM_REBELS ) {
 		int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
 
 		g_iLastCitizenModel = ( g_iLastCitizenModel + 1 ) % nHeads;
@@ -395,21 +385,14 @@ void CHL2MP_Player::SetPlayerModel( void )
 
 		m_iModelType = TEAM_REBELS;
 	}
-	else
-	{
+	else {
 		if ( Q_strlen( szModelName ) == 0 ) 
-		{
-			szModelName = g_ppszRandomCitizenModels[0];
-		}
+			szModelName = g_ppszRandomCitizenModels[0]
 
 		if ( Q_stristr( szModelName, "models/human") )
-		{
 			m_iModelType = TEAM_REBELS;
-		}
 		else
-		{
 			m_iModelType = TEAM_COMBINE;
-		}
 	}
 
 	int modelIndex = modelinfo->GetModelIndex( szModelName );
