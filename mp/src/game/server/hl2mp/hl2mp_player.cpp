@@ -547,11 +547,10 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, co
 	return vForward.Dot(vDiff) >= 0.707107f;
 }
 
-Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
-{
+Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate ) {
 	if ( m_iModelType == TEAM_COMBINE )
 		 return ActToTranslate;
-	
+
 	if ( ActToTranslate == ACT_RUN )
 		 return ACT_RUN_AIM_AGITATED;
 
@@ -566,29 +565,15 @@ Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 
 extern ConVar hl2_normspeed;
 
-// Set the activity based on an event or current state
-void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
-{
+// Set the activity based on an event or current state. #V
+void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim ) {
 	int animDesired;
 
 	float speed;
 
 	speed = GetAbsVelocity().Length2D();
 
-	
-	// bool bRunning = true;
-
-	//Revisit!
-/*	if ( ( m_nButtons & ( IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT ) ) )
-	{
-		if ( speed > 1.0f && speed < hl2_normspeed.GetFloat() - 20.0f )
-		{
-			bRunning = false;
-		}
-	}*/
-
-	if ( GetFlags() & ( FL_FROZEN | FL_ATCONTROLS ) )
-	{
+	if ( GetFlags() & ( FL_FROZEN | FL_ATCONTROLS ) ) {
 		speed = 0;
 		playerAnim = PLAYER_IDLE;
 	}
@@ -597,83 +582,30 @@ void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
 
 	// This could stand to be redone. Why is playerAnim abstracted from activity? (sjb)
 	if ( playerAnim == PLAYER_JUMP )
-	{
 		idealActivity = ACT_HL2MP_JUMP;
-	}
-	else if ( playerAnim == PLAYER_DIE )
-	{
-		if ( m_lifeState == LIFE_ALIVE )
-		{
+	else if ( playerAnim == PLAYER_DIE && m_lifeState == LIFE_ALIVE )
 			return;
-		}
-	}
-	else if ( playerAnim == PLAYER_ATTACK1 )
-	{
+	else if ( playerAnim == PLAYER_ATTACK1 ) {
 		if ( GetActivity( ) == ACT_HOVER	|| 
 			 GetActivity( ) == ACT_SWIM		||
 			 GetActivity( ) == ACT_HOP		||
 			 GetActivity( ) == ACT_LEAP		||
 			 GetActivity( ) == ACT_DIESIMPLE )
-		{
-			idealActivity = GetActivity( );
-		}
+			 
+			 idealActivity = GetActivity( );
 		else
-		{
 			idealActivity = ACT_HL2MP_GESTURE_RANGE_ATTACK;
-		}
 	}
 	else if ( playerAnim == PLAYER_RELOAD )
-	{
 		idealActivity = ACT_HL2MP_GESTURE_RELOAD;
-	}
 	else if ( playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK )
 	{
 		if ( !( GetFlags() & FL_ONGROUND ) && GetActivity( ) == ACT_HL2MP_JUMP )	// Still jumping
-		{
 			idealActivity = GetActivity( );
-		}
-		/*
-		else if ( GetWaterLevel() > 1 )
-		{
-			if ( speed == 0 )
-				idealActivity = ACT_HOVER;
-			else
-				idealActivity = ACT_SWIM;
-		}
-		*/
-		else
-		{
-			if ( GetFlags() & FL_DUCKING )
-			{
-				if ( speed > 0 )
-				{
-					idealActivity = ACT_HL2MP_WALK_CROUCH;
-				}
-				else
-				{
-					idealActivity = ACT_HL2MP_IDLE_CROUCH;
-				}
-			}
-			else
-			{
-				if ( speed > 0 )
-				{
-					/*
-					if ( bRunning == false )
-					{
-						idealActivity = ACT_WALK;
-					}
-					else
-					*/
-					{
-						idealActivity = ACT_HL2MP_RUN;
-					}
-				}
-				else
-				{
-					idealActivity = ACT_HL2MP_IDLE;
-				}
-			}
+		else {
+			idealActivity = GetFlags() & FL_DUCKING ?
+				speed > 0 ? ACT_HL2MP_WALK_CROUCH : ACT_HL2MP_IDLE_CROUCH :
+				speed > 0 ? ACT_HL2MP_RUN : ACT_HL2MP_IDLE;
 		}
 
 		idealActivity = TranslateTeamActivity( idealActivity );
