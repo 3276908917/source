@@ -1080,16 +1080,11 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint( void ) {
 
 ReturnSpot:
 
-	if ( HL2MPRules()->IsTeamplay() == true )
-	{
+	if ( HL2MPRules()->IsTeamplay() == true ) {
 		if ( GetTeamNumber() == TEAM_COMBINE )
-		{
 			g_pLastCombineSpawn = pSpot;
-		}
 		else if ( GetTeamNumber() == TEAM_REBELS ) 
-		{
 			g_pLastRebelSpawn = pSpot;
-		}
 	}
 
 	g_pLastSpawn = pSpot;
@@ -1106,19 +1101,13 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 
 	int iTimeRemaining = (int)HL2MPRules()->GetMapRemainingTime();
     
-	if ( iTimeRemaining == 0 )
-	{
+	if ( iTimeRemaining == 0 ) {
 		if ( pPlayer )
-		{
-			ClientPrint( pPlayer, HUD_PRINTTALK, "This game has no timelimit." );
-		}
+			ClientPrint(pPlayer, HUD_PRINTTALK, "This game has no timelimit.");
 		else
-		{
 			Msg( "* No Time Limit *\n" );
-		}
 	}
-	else
-	{
+	else {
 		int iMinutes, iSeconds;
 		iMinutes = iTimeRemaining / 60;
 		iSeconds = iTimeRemaining % 60;
@@ -1130,43 +1119,35 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 		Q_snprintf( seconds, sizeof(seconds), "%2.2d", iSeconds );
 
 		if ( pPlayer )
-		{
 			ClientPrint( pPlayer, HUD_PRINTTALK, "Time left in map: %s1:%s2", minutes, seconds );
-		}
 		else
-		{
 			Msg( "Time Remaining:  %s:%s\n", minutes, seconds );
-		}
 	}	
 }
 
 
-void CHL2MP_Player::Reset()
-{	
+// Reset only takes this much?
+void CHL2MP_Player::Reset() {	
 	ResetDeathCount();
 	ResetFragCount();
 }
 
-bool CHL2MP_Player::IsReady()
-{
+bool CHL2MP_Player::IsReady() {
 	return m_bReady;
 }
 
-void CHL2MP_Player::SetReady( bool bReady )
-{
+void CHL2MP_Player::SetReady( bool bReady ) {
 	m_bReady = bReady;
 }
 
-void CHL2MP_Player::CheckChatText( char *p, int bufsize )
-{
+void CHL2MP_Player::CheckChatText( char *p, int bufsize ) {
 	//Look for escape sequences and replace
 
 	char *buf = new char[bufsize];
 	int pos = 0;
 
 	// Parse say text for escape sequences
-	for ( char *pSrc = p; pSrc != NULL && *pSrc != 0 && pos < bufsize-1; pSrc++ )
-	{
+	for ( char *pSrc = p; pSrc != NULL && *pSrc != 0 && pos < bufsize-1; pSrc++ ) {
 		// copy each char across
 		buf[pos] = *pSrc;
 		pos++;
@@ -1184,15 +1165,13 @@ void CHL2MP_Player::CheckChatText( char *p, int bufsize )
 	HL2MPRules()->CheckChatForReadySignal( this, pReadyCheck );
 }
 
-void CHL2MP_Player::State_Transition( HL2MPPlayerState newState )
-{
+void CHL2MP_Player::State_Transition( HL2MPPlayerState newState ) {
 	State_Leave();
 	State_Enter( newState );
 }
 
 
-void CHL2MP_Player::State_Enter( HL2MPPlayerState newState )
-{
+void CHL2MP_Player::State_Enter( HL2MPPlayerState newState ) {
 	m_iPlayerState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 
@@ -1202,27 +1181,22 @@ void CHL2MP_Player::State_Enter( HL2MPPlayerState newState )
 }
 
 
-void CHL2MP_Player::State_Leave()
-{
+void CHL2MP_Player::State_Leave() {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
-	{
 		(this->*m_pCurStateInfo->pfnLeaveState)();
-	}
 }
 
 
-void CHL2MP_Player::State_PreThink()
-{
+void CHL2MP_Player::State_PreThink() {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnPreThink )
-	{
 		(this->*m_pCurStateInfo->pfnPreThink)();
-	}
 }
 
 
 CHL2MPPlayerStateInfo *CHL2MP_Player::State_LookupInfo( HL2MPPlayerState state )
 {
-	// This table MUST match the 
+	// This table MUST match the #V
+		// #L somebody die?
 	static CHL2MPPlayerStateInfo playerStateInfos[] =
 	{
 		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CHL2MP_Player::State_Enter_ACTIVE, NULL, &CHL2MP_Player::State_PreThink_ACTIVE },
