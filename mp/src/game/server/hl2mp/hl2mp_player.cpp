@@ -315,7 +315,7 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 	int modelIndex = modelinfo->GetModelIndex( szModelName );
 
 	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false ) {
-		szModelName = "models/Combine_Soldier.mdl"; // Magic model. #L
+		szModelName = "models/Combine_Soldier.mdl";
 		m_iModelType = TEAM_COMBINE;
 
 		char szReturnString[512];
@@ -324,8 +324,10 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 		engine->ClientCommand ( edict(), szReturnString );
 	}
 
-	if ( GetTeamNumber() == TEAM_COMBINE ) {
-		if ( Q_stristr( szModelName, "models/human") ) {
+	if ( GetTeamNumber() == TEAM_COMBINE )
+	{
+		if ( Q_stristr( szModelName, "models/human") )
+		{
 			int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
 		
 			g_iLastCombineModel = ( g_iLastCombineModel + 1 ) % nHeads;
@@ -334,8 +336,10 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 
 		m_iModelType = TEAM_COMBINE;
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS ) {
-		if ( !Q_stristr( szModelName, "models/human") )	{
+	else if ( GetTeamNumber() == TEAM_REBELS )
+	{
+		if ( !Q_stristr( szModelName, "models/human") )
+		{
 			int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
 
 			g_iLastCitizenModel = ( g_iLastCitizenModel + 1 ) % nHeads;
@@ -351,17 +355,19 @@ void CHL2MP_Player::SetPlayerTeamModel( void ) {
 	m_flNextModelChangeTime = gpGlobals->curtime + MODEL_CHANGE_INTERVAL;
 }
 
-// STOP PUTTING VOIDS IN THE METHOD HEADERS
-void CHL2MP_Player::SetPlayerModel( void ) {
+void CHL2MP_Player::SetPlayerModel( void )
+{
 	const char *szModelName = NULL;
 	const char *pszCurrentModelName = modelinfo->GetModelName( GetModel());
 
 	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
 
-	if ( ValidatePlayerModel( szModelName ) == false ) {
+	if ( ValidatePlayerModel( szModelName ) == false )
+	{
 		char szReturnString[512];
 
-		if ( ValidatePlayerModel( pszCurrentModelName ) == false ) {
+		if ( ValidatePlayerModel( pszCurrentModelName ) == false )
+		{
 			pszCurrentModelName = "models/Combine_Soldier.mdl";
 		}
 
@@ -371,7 +377,8 @@ void CHL2MP_Player::SetPlayerModel( void ) {
 		szModelName = pszCurrentModelName;
 	}
 
-	if ( GetTeamNumber() == TEAM_COMBINE ) {
+	if ( GetTeamNumber() == TEAM_COMBINE )
+	{
 		int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
 		
 		g_iLastCombineModel = ( g_iLastCombineModel + 1 ) % nHeads;
@@ -379,7 +386,8 @@ void CHL2MP_Player::SetPlayerModel( void ) {
 
 		m_iModelType = TEAM_COMBINE;
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS ) {
+	else if ( GetTeamNumber() == TEAM_REBELS )
+	{
 		int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
 
 		g_iLastCitizenModel = ( g_iLastCitizenModel + 1 ) % nHeads;
@@ -387,19 +395,28 @@ void CHL2MP_Player::SetPlayerModel( void ) {
 
 		m_iModelType = TEAM_REBELS;
 	}
-	else {
+	else
+	{
 		if ( Q_strlen( szModelName ) == 0 ) 
+		{
 			szModelName = g_ppszRandomCitizenModels[0];
+		}
+
 		if ( Q_stristr( szModelName, "models/human") )
+		{
 			m_iModelType = TEAM_REBELS;
+		}
 		else
+		{
 			m_iModelType = TEAM_COMBINE;
+		}
 	}
 
 	int modelIndex = modelinfo->GetModelIndex( szModelName );
 
-	if ( modelIndex == -1 ) {
-		szModelName = "models/Combine_Soldier.mdl"; // MAGIC
+	if ( modelIndex == -1 )
+	{
+		szModelName = "models/Combine_Soldier.mdl";
 		m_iModelType = TEAM_COMBINE;
 
 		char szReturnString[512];
@@ -414,17 +431,26 @@ void CHL2MP_Player::SetPlayerModel( void ) {
 	m_flNextModelChangeTime = gpGlobals->curtime + MODEL_CHANGE_INTERVAL;
 }
 
-void CHL2MP_Player::SetupPlayerSoundsByModel( const char *pModelName ) {
+void CHL2MP_Player::SetupPlayerSoundsByModel( const char *pModelName )
+{
 	if ( Q_stristr( pModelName, "models/human") )
+	{
 		m_iPlayerSoundType = (int)PLAYER_SOUNDS_CITIZEN;
+	}
 	else if ( Q_stristr(pModelName, "police" ) )
+	{
 		m_iPlayerSoundType = (int)PLAYER_SOUNDS_METROPOLICE;
+	}
 	else if ( Q_stristr(pModelName, "combine" ) )
+	{
 		m_iPlayerSoundType = (int)PLAYER_SOUNDS_COMBINESOLDIER;
+	}
 }
 
-void CHL2MP_Player::ResetAnimation( void ) {
-	if ( IsAlive() ) {
+void CHL2MP_Player::ResetAnimation( void )
+{
+	if ( IsAlive() )
+	{
 		SetSequence ( -1 );
 		SetActivity( ACT_INVALID );
 
@@ -438,42 +464,52 @@ void CHL2MP_Player::ResetAnimation( void ) {
 }
 
 
-bool CHL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex ) {
-	if (BaseClass::Weapon_Switch(pWeapon, viewmodelindex)) {
+bool CHL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
+{
+	bool bRet = BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
+
+	if ( bRet == true )
+	{
 		ResetAnimation();
-		return true;
 	}
-	return false;
+
+	return bRet;
 }
 
-void CHL2MP_Player::PreThink( void ) {
+void CHL2MP_Player::PreThink( void )
+{
 	QAngle vOldAngles = GetLocalAngles();
 	QAngle vTempAngles = GetLocalAngles();
 
 	vTempAngles = EyeAngles();
 
 	if ( vTempAngles[PITCH] > 180.0f )
+	{
 		vTempAngles[PITCH] -= 360.0f;
+	}
 
 	SetLocalAngles( vTempAngles );
 
 	BaseClass::PreThink();
 	State_PreThink();
 
-	//Reset bullet force accumulator, only lasts one frame #V
+	//Reset bullet force accumulator, only lasts one frame
 	m_vecTotalBulletForce = vec3_origin;
 	SetLocalAngles( vOldAngles );
 }
 
-void CHL2MP_Player::PostThink( void ) {
+void CHL2MP_Player::PostThink( void )
+{
 	BaseClass::PostThink();
 	
 	if ( GetFlags() & FL_DUCKING )
+	{
 		SetCollisionBounds( VEC_CROUCH_TRACE_MIN, VEC_CROUCH_TRACE_MAX );
+	}
 
 	m_PlayerAnimState.Update();
 
-	// Store the eye angles pitch so the client can compute its animation state correctly. #V
+	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 
 	QAngle angles = GetLocalAngles();
@@ -481,14 +517,17 @@ void CHL2MP_Player::PostThink( void ) {
 	SetLocalAngles( angles );
 }
 
-void CHL2MP_Player::PlayerDeathThink() {
+void CHL2MP_Player::PlayerDeathThink()
+{
 	if( !IsObserver() )
+	{
 		BaseClass::PlayerDeathThink();
+	}
 }
 
-void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info ) {
-	// Move other players back to history positions based on local player's lag #V
-		// What?? Why?!
+void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
+{
+	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( this, this->GetCurrentCommand() );
 
 	FireBulletsInfo_t modinfo = info;
@@ -496,32 +535,37 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info ) {
 	CWeaponHL2MPBase *pWeapon = dynamic_cast<CWeaponHL2MPBase *>( GetActiveWeapon() );
 
 	if ( pWeapon )
+	{
 		modinfo.m_iPlayerDamage = modinfo.m_flDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
+	}
 
 	NoteWeaponFired();
 
 	BaseClass::FireBullets( modinfo );
 
-	// Move other players back to history positions based on local player's lag #V
+	// Move other players back to history positions based on local player's lag
 	lagcompensation->FinishLagCompensation( this );
 }
 
-void CHL2MP_Player::NoteWeaponFired( void ) {
+void CHL2MP_Player::NoteWeaponFired( void )
+{
 	Assert( m_pCurrentCommand );
 	if( m_pCurrentCommand )
+	{
 		m_iLastWeaponFireUsercmd = m_pCurrentCommand->command_number;
+	}
 }
 
 extern ConVar sv_maxunlag;
 
-// Check out this syntax. A const at the end?
-bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const {
+bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
+{
 	// No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently. #V
+	// we haven't attacked recently.
 	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
 		return false;
 
-	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it. #V
+	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
 	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
 		return false;
 
@@ -529,22 +573,25 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, co
 	const Vector &vHisOrigin = pPlayer->GetAbsOrigin();
 
 	// get max distance player could have moved within max lag compensation time, 
-	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value) #V
-	// What are dead zones?
+	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
 	float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
 
-	// If the player is within this distance, lag compensate them in case they're running past us. #V
+	// If the player is within this distance, lag compensate them in case they're running past us.
 	if ( vHisOrigin.DistTo( vMyOrigin ) < maxDistance )
 		return true;
 
-	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate. #V
+	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
 	Vector vForward;
 	AngleVectors( pCmd->viewangles, &vForward );
 	
 	Vector vDiff = vHisOrigin - vMyOrigin;
 	VectorNormalize( vDiff );
 
-	return vForward.Dot(vDiff) >= 0.707107f;
+	float flCosAngle = 0.707107f;	// 45 degree angle
+	if ( vForward.Dot( vDiff ) < flCosAngle )
+		return false;
+
+	return true;
 }
 
 Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
