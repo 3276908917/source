@@ -177,13 +177,21 @@ void CPlayerAnimState::ComputePlaybackRate() {
 		GetOuter()->SetPlaybackRate( 1.0f );
 }
 
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Output : CBasePlayer
-CHL2MP_Player *CPlayerAnimState::GetOuter() { return m_pOuter; }
+//-----------------------------------------------------------------------------
+CHL2MP_Player *CPlayerAnimState::GetOuter()
+{
+	return m_pOuter;
+}
 
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : dt - 
-void CPlayerAnimState::EstimateYaw( void ) {
+//-----------------------------------------------------------------------------
+void CPlayerAnimState::EstimateYaw( void )
+{
 	float dt = gpGlobals->frametime;
 
 	if ( !dt ) return;
@@ -195,7 +203,8 @@ void CPlayerAnimState::EstimateYaw( void ) {
 
 	angles = GetOuter()->GetLocalAngles();
 
-	if ( est_velocity[1] == 0 && est_velocity[0] == 0 ) {
+	if ( est_velocity[1] == 0 && est_velocity[0] == 0 )
+	{
 		float flYawDiff = angles[YAW] - m_flGaitYaw;
 		flYawDiff = flYawDiff - (int)(flYawDiff / 360) * 360;
 		if (flYawDiff > 180)
@@ -211,7 +220,8 @@ void CPlayerAnimState::EstimateYaw( void ) {
 		m_flGaitYaw += flYawDiff;
 		m_flGaitYaw = m_flGaitYaw - (int)(m_flGaitYaw / 360) * 360;
 	}
-	else {
+	else
+	{
 		m_flGaitYaw = (atan2(est_velocity[1], est_velocity[0]) * 180 / M_PI);
 
 		if (m_flGaitYaw > 180)
@@ -221,11 +231,15 @@ void CPlayerAnimState::EstimateYaw( void ) {
 	}
 }
 
+//-----------------------------------------------------------------------------
 // Purpose: Override for backpeddling
 // Input  : dt - 
-void CPlayerAnimState::ComputePoseParam_BodyYaw( void ) {
+//-----------------------------------------------------------------------------
+void CPlayerAnimState::ComputePoseParam_BodyYaw( void )
+{
 	int iYaw = GetOuter()->LookupPoseParameter( "move_yaw" );
-	if ( iYaw < 0 ) return;
+	if ( iYaw < 0 )
+		return;
 
 	// view direction relative to movement
 	float flYaw;	 
@@ -235,9 +249,13 @@ void CPlayerAnimState::ComputePoseParam_BodyYaw( void ) {
 	QAngle	angles = GetOuter()->GetLocalAngles();
 	float ang = angles[ YAW ];
 	if ( ang > 180.0f )
+	{
 		ang -= 360.0f;
+	}
 	else if ( ang < -180.0f )
+	{
 		ang += 360.0f;
+	}
 
 	// calc side to side turning
 	flYaw = ang - m_flGaitYaw;
@@ -246,9 +264,13 @@ void CPlayerAnimState::ComputePoseParam_BodyYaw( void ) {
 	flYaw = flYaw - (int)(flYaw / 360) * 360;
 
 	if (flYaw < -180)
+	{
 		flYaw = flYaw + 360;
+	}
 	else if (flYaw > 180)
+	{
 		flYaw = flYaw - 360;
+	}
 	
 	GetOuter()->SetPoseParameter( iYaw, flYaw );
 
@@ -258,13 +280,18 @@ void CPlayerAnimState::ComputePoseParam_BodyYaw( void ) {
 #endif
 }
 
-//? Purpose: 
-void CPlayerAnimState::ComputePoseParam_BodyPitch( CStudioHdr *pStudioHdr ) {
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPlayerAnimState::ComputePoseParam_BodyPitch( CStudioHdr *pStudioHdr )
+{
 	// Get pitch from v_angle
 	float flPitch = GetOuter()->GetLocalAngles()[ PITCH ];
 
 	if ( flPitch > 180.0f )
+	{
 		flPitch -= 360.0f;
+	}
 	flPitch = clamp( flPitch, -90, 90 );
 
 	QAngle absangles = GetOuter()->GetAbsAngles();
@@ -276,13 +303,16 @@ void CPlayerAnimState::ComputePoseParam_BodyPitch( CStudioHdr *pStudioHdr ) {
 	GetOuter()->SetPoseParameter( pStudioHdr, "aim_pitch", flPitch );
 }
 
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : goal - 
 //			maxrate - 
 //			dt - 
 //			current - 
 // Output : int
-int CPlayerAnimState::ConvergeAngles( float goal,float maxrate, float dt, float& current ) {
+//-----------------------------------------------------------------------------
+int CPlayerAnimState::ConvergeAngles( float goal,float maxrate, float dt, float& current )
+{
 	int direction = TURN_NONE;
 
 	float anglediff = goal - current;
@@ -291,7 +321,8 @@ int CPlayerAnimState::ConvergeAngles( float goal,float maxrate, float dt, float&
 	anglediff = AngleNormalize( anglediff );
 
 	float scale = 1.0f;
-	if ( anglediffabs <= FADE_TURN_DEGREES ) {
+	if ( anglediffabs <= FADE_TURN_DEGREES )
+	{
 		scale = anglediffabs / FADE_TURN_DEGREES;
 		// Always do at least a bit of the turn ( 1% )
 		scale = clamp( scale, 0.01f, 1.0f );
@@ -300,13 +331,18 @@ int CPlayerAnimState::ConvergeAngles( float goal,float maxrate, float dt, float&
 	float maxmove = maxrate * dt * scale;
 
 	if ( fabs( anglediff ) < maxmove )
+	{
 		current = goal;
-	else {
-		if ( anglediff > 0 ) {
+	}
+	else
+	{
+		if ( anglediff > 0 )
+		{
 			current += maxmove;
 			direction = TURN_LEFT;
 		}
-		else {
+		else
+		{
 			current -= maxmove;
 			direction = TURN_RIGHT;
 		}
@@ -317,7 +353,8 @@ int CPlayerAnimState::ConvergeAngles( float goal,float maxrate, float dt, float&
 	return direction;
 }
 
-void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
+void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void )
+{
 	QAngle absangles = GetOuter()->GetAbsAngles();
 	absangles.y = AngleNormalize( absangles.y );
 	m_angRender = absangles;
@@ -325,8 +362,10 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 
 	// See if we even have a blender for pitch
 	int upper_body_yaw = GetOuter()->LookupPoseParameter( "aim_yaw" );
-	
-	if ( upper_body_yaw < 0 ) return;
+	if ( upper_body_yaw < 0 )
+	{
+		return;
+	}
 
 	// Assume upper and lower bodies are aligned and that we're not turning
 	float flGoalTorsoYaw = 0.0f;
@@ -339,9 +378,11 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 
 	bool isMoving = ( vel.Length() > 1.0f ) ? true : false;
 
-	if ( !isMoving ) {
+	if ( !isMoving )
+	{
 		// Just stopped moving, try and clamp feet
-		if ( m_flLastTurnTime <= 0.0f ) {
+		if ( m_flLastTurnTime <= 0.0f )
+		{
 			m_flLastTurnTime	= gpGlobals->curtime;
 			m_flLastYaw			= GetOuter()->GetAnimEyeAngles().y;
 			// Snap feet to be perfectly aligned with torso/eyes
@@ -351,13 +392,16 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 		}
 
 		// If rotating in place, update stasis timer
-		if ( m_flLastYaw != GetOuter()->GetAnimEyeAngles().y ) {
+		if ( m_flLastYaw != GetOuter()->GetAnimEyeAngles().y )
+		{
 			m_flLastTurnTime	= gpGlobals->curtime;
 			m_flLastYaw			= GetOuter()->GetAnimEyeAngles().y;
 		}
 
 		if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
+		{
 			m_flLastTurnTime	= gpGlobals->curtime;
+		}
 
 		turning = ConvergeAngles( m_flGoalFeetYaw, turnrate, gpGlobals->frametime, m_flCurrentFeetYaw );
 
@@ -369,16 +413,21 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 		yawdelta = AngleNormalize( yawdelta );
 
 		bool rotated_too_far = false;
+
 		float yawmagnitude = fabs( yawdelta );
 
 		// If too far, then need to turn in place
 		if ( yawmagnitude > 45 )
+		{
 			rotated_too_far = true;
+		}
 
 		// Standing still for a while, rotate feet around to face forward
 		// Or rotated too far
 		// FIXME:  Play an in place turning animation
-		if ( rotated_too_far || ( gpGlobals->curtime > m_flLastTurnTime + mp_facefronttime.GetFloat() ) ) {
+		if ( rotated_too_far || 
+			( gpGlobals->curtime > m_flLastTurnTime + mp_facefronttime.GetFloat() ) )
+		{
 			m_flGoalFeetYaw		= GetOuter()->GetAnimEyeAngles().y;
 			m_flLastTurnTime	= gpGlobals->curtime;
 
@@ -405,7 +454,8 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 		flGoalTorsoYaw = yawdelta;
 		m_flCurrentTorsoYaw = flGoalTorsoYaw;
 	}
-	else {
+	else
+	{
 		m_flLastTurnTime = 0.0f;
 		m_nTurningInPlace = TURN_NONE;
 		m_flCurrentFeetYaw = m_flGoalFeetYaw = GetOuter()->GetAnimEyeAngles().y;
@@ -415,12 +465,17 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 
 
 	if ( turning == TURN_NONE )
+	{
 		m_nTurningInPlace = turning;
+	}
 
-	if ( m_nTurningInPlace != TURN_NONE ) {
+	if ( m_nTurningInPlace != TURN_NONE )
+	{
 		// If we're close to finishing the turn, then turn off the turning animation
 		if ( fabs( m_flCurrentFeetYaw - m_flGoalFeetYaw ) < MIN_TURN_ANGLE_REQUIRING_TURN_ANIMATION )
+		{
 			m_nTurningInPlace = TURN_NONE;
+		}
 	}
 
 	// Rotate entire body into position
@@ -444,16 +499,21 @@ void CPlayerAnimState::ComputePoseParam_BodyLookYaw( void ) {
 }
 
 
+ 
+//-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : activity - 
 // Output : Activity
-Activity CPlayerAnimState::BodyYawTranslateActivity( Activity activity ) {
+//-----------------------------------------------------------------------------
+Activity CPlayerAnimState::BodyYawTranslateActivity( Activity activity )
+{
 	// Not even standing still, sigh
 	if ( activity != ACT_IDLE )
 		return activity;
 
 	// Not turning
-	switch ( m_nTurningInPlace ) {
+	switch ( m_nTurningInPlace )
+	{
 	default:
 	case TURN_NONE:
 		return activity;
@@ -467,13 +527,19 @@ Activity CPlayerAnimState::BodyYawTranslateActivity( Activity activity ) {
 	case TURN_LEFT:
 		return mp_ik.GetBool() ? ACT_TURN : activity;
 	}
+
 	Assert( 0 );
 	return activity;
 }
 
-const QAngle& CPlayerAnimState::GetRenderAngles() { return m_angRender; }
+const QAngle& CPlayerAnimState::GetRenderAngles()
+{
+	return m_angRender;
+}
 
-void CPlayerAnimState::GetOuterAbsVelocity( Vector& vel ) {
+
+void CPlayerAnimState::GetOuterAbsVelocity( Vector& vel )
+{
 #if defined( CLIENT_DLL )
 	GetOuter()->EstimateAbsVelocity( vel );
 #else
